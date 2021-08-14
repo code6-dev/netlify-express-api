@@ -1,6 +1,7 @@
 const cors = require('cors');
 const helmet = require('helmet');
 const express = require('express');
+const serverless = require('serverless-http');
 
 require('dotenv').config();
 
@@ -16,6 +17,7 @@ mongoose.connect(
   },
   () => console.log('DB Connected')
 );
+// mongoose.connection.close();
 
 const app = express();
 
@@ -23,10 +25,13 @@ const app = express();
 app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true }));
 
 //  Routes
-const authRoute = require('./routes/auth');
-const itemsRoute = require('./routes/item');
+const authRoute = require('../routes/auth');
+const itemRoute = require('../routes/item');
 
-app.use('/api/user', authRoute);
-app.use('/api/item', itemsRoute);
+// app.use('/api/user', authRoute);
+// app.use('/api/item', itemRoute);
+app.use('/.netlify/functions/auth', authRoute); // path must route to lambda
+app.use('/.netlify/functions/item', itemRoute); // path must route to lambda
 
-app.listen(3001, () => console.log('Server listening on Port 3001'));
+module.exports = app;
+module.exports.handler = serverless(app);
