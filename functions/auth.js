@@ -11,6 +11,19 @@ const serverless = require('serverless-http');
 const User = require('../express/models/User');
 const { validateRegistration, validateLogin } = require('../express/validation/validation');
 
+//  DB
+const mongoose = require('mongoose');
+mongoose.connect(
+  process.env.DB_HOST,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: false
+  },
+  () => console.log('DB Connected')
+);
+
 const app = express();
 
 //  Middleware
@@ -18,18 +31,6 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 
 //  Routes
 const router = express.Router();
-
-//  DB
-const mongoose = require('mongoose');
-mongoose.connect(
-  process.env.DB_HOST,
-  {
-    useNewUrlParser: true,
-    useFindAndModify: false,
-    useCreateIndex: false
-  },
-  () => console.log('DB Connected')
-);
 
 //  Registration
 router.post('/register', async (req, res) => {
@@ -62,8 +63,8 @@ router.post('/register', async (req, res) => {
       .then(() => {
         console.log('DB disconnected');
         mongoose.disconnect();
+        console.log(4);
       });
-    console.log(4);
     res.status(200).json({ id: user.id });
   } catch (error) {
     mongoose.disconnect();
