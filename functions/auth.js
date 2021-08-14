@@ -11,19 +11,6 @@ const serverless = require('serverless-http');
 const User = require('../express/models/User');
 const { validateRegistration, validateLogin } = require('../express/validation/validation');
 
-//  DB
-const mongoose = require('mongoose');
-mongoose.connect(
-  process.env.DB_HOST,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: false
-  },
-  () => console.log('DB Connected')
-);
-
 const app = express();
 
 //  Middleware
@@ -34,6 +21,19 @@ const router = express.Router();
 
 //  Registration
 router.post('/register', async (req, res) => {
+  //  DB
+  const mongoose = require('mongoose');
+  mongoose.connect(
+    process.env.DB_HOST,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: false
+    },
+    () => console.log('DB Connected')
+  );
+
   //  Validate information is as expected
   const { error, value } = validateRegistration(req.body);
   if (error) {
