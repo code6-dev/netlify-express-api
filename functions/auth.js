@@ -37,7 +37,7 @@ router.post('/register', async (req, res) => {
       useFindAndModify: false,
       useCreateIndex: false
     },
-    () => {
+    async () => {
       console.log('DB Connected');
       console.log(1);
       //  Check if email exists already
