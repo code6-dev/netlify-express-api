@@ -19,6 +19,20 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 //  Routes
 const router = express.Router();
 
+//  DB
+const mongoose = require('mongoose');
+console.log(process.env.DB_HOST.split('code6-dev')[0]);
+mongoose.connect(
+  process.env.DB_HOST,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true
+  },
+  () => console.log('DB Connected')
+);
+
 //  Registration
 router.post('/register', async (req, res) => {
   //  Validate information is as expected
@@ -26,19 +40,6 @@ router.post('/register', async (req, res) => {
   if (error) {
     res.status(400).json({ error: error.details.map((m) => m.message) });
   }
-
-  //  DB
-  const mongoose = require('mongoose');
-  mongoose.connect(
-    process.env.DB_HOST,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true
-    },
-    () => console.log('DB Connected')
-  );
 
   //  Check if email exists already
   const ifExists = await User.findOne({ email: value.email });
