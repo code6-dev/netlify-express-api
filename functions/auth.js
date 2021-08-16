@@ -3,10 +3,10 @@
 require('dotenv').config();
 const cors = require('cors');
 const helmet = require('helmet');
-// const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 const express = require('express');
 const jwt = require('jsonwebtoken');
-// const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const serverless = require('serverless-http');
 
 const User = require('../express/models/User');
@@ -21,22 +21,16 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 const router = express.Router();
 
 //  Registration
-router.post('/register', async (req, res) => {
+router.post('/register', (req, res) => {
   //  Validate information is as expected
-  const { validateRegistration } = require('../express/validation/validation');
   const { error, value } = validateRegistration(req.body);
   if (error) {
     res.status(400).json({ error: error.details.map((m) => m.message) });
   }
-  const mongoose = require('mongoose');
-  const User = require('../express/models/User');
 
   //  DB
   const db = mongoose.connect(process.env.DB_HOST, {
-    useNewUrlParser: true,
-    useUnifiedTopology: false,
-    useFindAndModify: false,
-    useCreateIndex: false
+    useNewUrlParser: true
   });
 
   User.find({ email: value.email }, function (err, docs) {
@@ -44,7 +38,6 @@ router.post('/register', async (req, res) => {
       res.status(400).json({ error: 'Email already exists' });
     } else {
       //  Hash Password
-      const bcrypt = require('bcryptjs');
       const salt = bcrypt.genSalt(10);
       const hashed = bcrypt.hash(value.password, salt);
 
