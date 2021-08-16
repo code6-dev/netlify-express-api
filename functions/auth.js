@@ -21,23 +21,28 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 const router = express.Router();
 
 //  Registration
-router.post('/register', async (req, res) => {
+router.post('/register', (req, res) => {
   //  Validate information is as expected
   req.apiGateway.context.callbackWaitsForEmptyEventLoop = false;
-  console.log(JSON.stringify(req.apiGateway.contextcallbackWaitsForEmptyEventLoop));
   const { error, value } = validateRegistration(req.body);
   if (error) {
     return res.status(400).json({ error: error.details.map((m) => m.message) });
   }
+  var newUser;
 
   //  Hash Password
-  const salt = await bcrypt.genSalt(10);
-  const hashed = await bcrypt.hash(value.password, salt);
-
-  const newUser = new User({
-    name: value.name,
-    email: value.email,
-    password: hashed
+  bcrypt.genSalt(10).then((s) => {
+    if (s) {
+      return bcrypt.hash(value.password, s).then((p) => {
+        if (p) {
+          return (newUser = new User({
+            name: value.name,
+            email: value.email,
+            password: hashed
+          }));
+        }
+      });
+    }
   });
 
   //  DB
