@@ -3,12 +3,10 @@
 require('dotenv').config();
 const cors = require('cors');
 const helmet = require('helmet');
-const bcrypt = require('bcryptjs');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const serverless = require('serverless-http');
 
-const User = require('../express/models/User');
 const { validateRegistration, validateLogin } = require('../express/validation/validation');
 
 const app = express();
@@ -26,6 +24,7 @@ router.post('/register', async (req, res) => {
   if (error) {
     res.status(400).json({ error: error.details.map((m) => m.message) });
   }
+  const User = require('../express/models/User');
 
   //  DB
   const mongoose = require('mongoose');
@@ -33,43 +32,40 @@ router.post('/register', async (req, res) => {
     process.env.DB_HOST,
     {
       useNewUrlParser: true,
-      useUnifiedTopology: false,
-      useFindAndModify: false,
-      useCreateIndex: false
+      // useUnifiedTopology: true,
+      // useFindAndModify: false,
+      connectTimeoutMS: 10000
     },
-    () => {
-      console.log('DB Connected');
-      console.log(1);
+    async () => {
       //  Check if email exists already
-      const ifExists = await User.findOne({ email: value.email });
-      if (ifExists) {
-        res.status(400).json({ error: 'Email already exists' });
-      }
-      console.log(2);
+      User.findOne({ email: value.email }).then((f) => {
+        if (!f) {
+          res.status(400).json({ error: 'Email already exists' });
+        }
+        const bcrypt = require('bcryptjs');
 
-      //  Hash Password
-      const salt = await bcrypt.genSalt(10);
-      const hashed = await bcrypt.hash(value.password, salt);
-      console.log(3);
+        //  Hash Password
+        const salt = await bcrypt.genSalt(10);
+        const hashed = await bcrypt.hash(value.password, salt);
 
-      //  Process user details and save to DB
-      try {
-        const user = await new User({
-          name: value.name,
-          email: value.email,
-          password: hashed
-        })
-          .save()
-          .then(() => {
-            console.log('DB disconnected');
-            mongoose.disconnect();
-            console.log(4);
-          });
-        res.status(200).json({ id: user.id });
-      } catch (error) {
-        mongoose.disconnect();
-        res.sendStatus(500).end();
-      }
+        //  Process user details and save to DB
+        try {
+          const user = await new User({
+            name: value.name,
+            email: value.email,
+            password: hashed
+          })
+            .save()
+            .then(() => {
+              console.log('DB disconnected');
+              mongoose.disconnect();
+            });
+          res.status(200).json({ id: user.id });
+        } catch (error) {
+          mongoose.disconnect();
+          res.sendStatus(500).end();
+        }
+      });
     }
   );
 });
