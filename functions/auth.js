@@ -23,6 +23,7 @@ const router = express.Router();
 router.post('/register', (req, res) => {
   //  Validate information is as expected
   const { error, value } = validateRegistration(req.body);
+  console.log(value);
   if (error) {
     return res.status(400).json({ error: error.details.map((m) => m.message) });
   }
@@ -42,7 +43,8 @@ router.post('/register', (req, res) => {
       });
     }
   });
-
+  console.log(newUser);
+  console.log(process.env.DB_HOST.split('/')[0]);
   //  DB
   mongoose
     .connect(process.env.DB_HOST, {
@@ -51,7 +53,8 @@ router.post('/register', (req, res) => {
     })
     .then((c) => {
       console.log('DB Connected');
-      User.save()
+      newUser
+        .save()
         .then((d) => {
           console.log('Save to DB');
           return res.status(200).json({ id: newUser.id });
