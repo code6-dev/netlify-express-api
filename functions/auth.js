@@ -25,11 +25,11 @@ router.post('/register', (req, res) => {
   //  Validate information is as expected
   const { error, value } = validateRegistration(req.body);
   if (error) {
-    res.status(400).json({ error: error.details.map((m) => m.message) });
+    return res.status(400).json({ error: error.details.map((m) => m.message) });
   }
 
   //  DB
-  const db = mongoose
+  mongoose
     .connect(process.env.DB_HOST, {
       useNewUrlParser: true,
       useUnifiedTopology: true
@@ -46,12 +46,12 @@ router.post('/register', (req, res) => {
       })
         .save()
         .then((d) => {
-          res.status(200).json({ id: newUser.id });
+          return res.status(200).json({ id: newUser.id });
         })
-        .finally((f) => db.disconnect())
+        .finally((f) => mongoose.disconnect())
         .catch((err) => {
-          res.status(400).json({ error: err });
-          db.disconnect();
+          mongoose.disconnect();
+          return res.status(400).json({ error: err });
         });
 
       // User.find({ email: value.email }, function (err, docs) {
@@ -60,6 +60,10 @@ router.post('/register', (req, res) => {
       //   } else {
       //   }
       // });
+    })
+    .catch((err) => {
+      mongoose.disconnect();
+      return res.status(400).json({ error: err });
     });
 });
 
