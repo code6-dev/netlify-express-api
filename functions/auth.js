@@ -21,7 +21,7 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 const router = express.Router();
 
 //  Registration
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   //  Validate information is as expected
   console.log(req);
   const { error, value } = validateRegistration(req.body);
@@ -29,8 +29,8 @@ router.post('/register', (req, res) => {
     return res.status(400).json({ error: error.details.map((m) => m.message) });
   }
 
-  const salt = bcrypt.genSalt(10);
-  const hashed = bcrypt.hash(value.password, salt);
+  const salt = await bcrypt.genSalt(10);
+  const hashed = await bcrypt.hash(value.password, salt);
 
   const newUser = new User({
     name: value.name,
