@@ -3,10 +3,10 @@
 require('dotenv').config();
 const cors = require('cors');
 const helmet = require('helmet');
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const serverless = require('serverless-http');
 
 const User = require('../express/models/User');
@@ -23,10 +23,13 @@ const router = express.Router();
 //  Registration
 router.post('/register', async (req, res) => {
   //  Validate information is as expected
+  const { validateRegistration } = require('../express/validation/validation');
   const { error, value } = validateRegistration(req.body);
   if (error) {
     res.status(400).json({ error: error.details.map((m) => m.message) });
   }
+  const mongoose = require('mongoose');
+  const User = require('../express/models/User');
 
   //  DB
   const db = mongoose.connect(process.env.DB_HOST, {
@@ -41,6 +44,7 @@ router.post('/register', async (req, res) => {
       res.status(400).json({ error: 'Email already exists' });
     } else {
       //  Hash Password
+      const bcrypt = require('bcryptjs');
       const salt = bcrypt.genSalt(10);
       const hashed = bcrypt.hash(value.password, salt);
 
@@ -51,8 +55,12 @@ router.post('/register', async (req, res) => {
       })
         .save()
         .then((d) => {
-          db.disconnect();
           res.status(200).json({ id: newUser.id });
+        })
+        .finally((f) => db.disconnect())
+        .catch((err) => {
+          res.status(400).json({ error: err });
+          db.disconnect();
         });
     }
   });
