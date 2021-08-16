@@ -35,30 +35,31 @@ router.post('/register', (req, res) => {
       useUnifiedTopology: true
     })
     .then((c) => {
-      User.find({ email: value.email }, function (err, docs) {
-        if (docs) {
-          res.status(400).json({ error: 'Email already exists' });
-        } else {
-          //  Hash Password
-          const salt = bcrypt.genSalt(10);
-          const hashed = bcrypt.hash(value.password, salt);
+      //  Hash Password
+      const salt = bcrypt.genSalt(10);
+      const hashed = bcrypt.hash(value.password, salt);
 
-          const newUser = new User({
-            name: value.name,
-            email: value.email,
-            password: hashed
-          })
-            .save()
-            .then((d) => {
-              res.status(200).json({ id: newUser.id });
-            })
-            .finally((f) => db.disconnect())
-            .catch((err) => {
-              res.status(400).json({ error: err });
-              db.disconnect();
-            });
-        }
-      });
+      const newUser = new User({
+        name: value.name,
+        email: value.email,
+        password: hashed
+      })
+        .save()
+        .then((d) => {
+          res.status(200).json({ id: newUser.id });
+        })
+        .finally((f) => db.disconnect())
+        .catch((err) => {
+          res.status(400).json({ error: err });
+          db.disconnect();
+        });
+
+      // User.find({ email: value.email }, function (err, docs) {
+      //   if (docs) {
+      //     res.status(400).json({ error: 'Email already exists' });
+      //   } else {
+      //   }
+      // });
     });
 });
 
