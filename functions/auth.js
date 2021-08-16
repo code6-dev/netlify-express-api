@@ -20,21 +20,21 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 const router = express.Router();
 
 //  Registration
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   //  Validate information is as expected
   const { error, value } = validateRegistration(req.body);
   console.log(value);
   if (error) {
-    return res.status(400).json({ error: error.details.map((m) => m.message) });
+    return res.status(400).json({ 'JOI Error': error.details.map((m) => m.message) });
   }
   var newUser;
 
   //  Hash Password
-  const s = bcrypt.genSalt(10).then((s) => s);
-  const hashed = bcrypt.hash(value.password, s).then((p) => p);
+  const s = await bcrypt.genSalt(10); //.then((s) => s);
+  const hashed = await bcrypt.hash(value.password, s); //.then((p) => p);
 
   if (!!hashed) {
-    console.log(hashed);
+    console.log('Hashed : ' + hashed);
     newUser = new User({
       name: value.name,
       email: value.email,
@@ -54,7 +54,7 @@ router.post('/register', (req, res) => {
     .finally((f) => mongoose.disconnect())
     .catch((err) => {
       mongoose.disconnect();
-      return res.status(400).json({ error: err });
+      return res.status(400).json({ 'Save Error': err });
     });
 
   // User.find({ email: value.email }, function (err, docs) {
