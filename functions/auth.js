@@ -30,21 +30,18 @@ router.post('/register', (req, res) => {
   var newUser;
 
   //  Hash Password
-  bcrypt.genSalt(10).then((s) => {
-    if (s) {
-      return bcrypt.hash(value.password, s).then((p) => {
-        if (p) {
-          return (newUser = new User({
-            name: value.name,
-            email: value.email,
-            password: p
-          }));
-        }
-      });
-    }
-  });
-  console.log(newUser);
-  console.log(process.env.DB_HOST.split('/')[0]);
+  const s = bcrypt.genSalt(10);
+  const hashed = bcrypt.hash(value.password, s);
+
+  if (!!hashed) {
+    newUser = new User({
+      name: value.name,
+      email: value.email,
+      password: hashed
+    });
+  }
+
+  console.log('New User ' + newUser);
   //  DB
   mongoose
     .connect(process.env.DB_HOST, {
