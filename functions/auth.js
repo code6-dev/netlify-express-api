@@ -1,6 +1,5 @@
 'use strict';
 
-require('dotenv').config();
 const cors = require('cors');
 const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
@@ -51,8 +50,10 @@ router.post('/register', (req, res) => {
       useUnifiedTopology: true
     })
     .then((c) => {
+      console.log('DB Connected');
       User.save()
         .then((d) => {
+          console.log('Save to DB');
           return res.status(200).json({ id: newUser.id });
         })
         .finally((f) => mongoose.disconnect())
@@ -72,6 +73,7 @@ router.post('/register', (req, res) => {
       mongoose.disconnect();
       return res.status(400).json({ error: err });
     });
+  console.log('Done');
 });
 
 //  Login
