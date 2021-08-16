@@ -38,7 +38,7 @@ router.post('/register', (req, res) => {
           return (newUser = new User({
             name: value.name,
             email: value.email,
-            password: hashed
+            password: p
           }));
         }
       });
