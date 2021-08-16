@@ -19,6 +19,15 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 //  Routes
 const router = express.Router();
 
+mongoose.connect(
+  process.env.DB_HOST,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  },
+  () => console.log('DB Connected')
+);
+
 //  Registration
 router.post('/register', async (req, res) => {
   //  Validate information is as expected
@@ -27,35 +36,32 @@ router.post('/register', async (req, res) => {
   if (error) {
     return res.status(400).json({ 'JOI Error': error.details.map((m) => m.message) });
   }
-  var newUser;
 
   //  Hash Password
   const s = await bcrypt.genSalt(10); //.then((s) => s);
   const hashed = await bcrypt.hash(value.password, s); //.then((p) => p);
 
   if (!!hashed) {
-    console.log('Hashed : ' + hashed);
-    newUser = new User({
+    console.log(`${hashed ? 'Good Hash' : 'No Hash'}`);
+    const newUser = new User({
       name: value.name,
       email: value.email,
       password: hashed
-    });
+    })
+      .save()
+      .then((d) => {
+        console.log('New User ' + newUser);
+        console.log('Save to DB');
+        return res.status(200).json({ id: newUser.id });
+      })
+      .finally((f) => mongoose.disconnect())
+      .catch((err) => {
+        mongoose.disconnect();
+        return res.status(400).json({ 'Save Error': err });
+      });
   }
 
-  console.log('New User ' + newUser);
   //  DB
-
-  newUser
-    .save()
-    .then((d) => {
-      console.log('Save to DB');
-      return res.status(200).json({ id: newUser.id });
-    })
-    .finally((f) => mongoose.disconnect())
-    .catch((err) => {
-      mongoose.disconnect();
-      return res.status(400).json({ 'Save Error': err });
-    });
 
   // User.find({ email: value.email }, function (err, docs) {
   //   if (docs) {
