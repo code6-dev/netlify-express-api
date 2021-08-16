@@ -23,12 +23,14 @@ const router = express.Router();
 //  Registration
 router.post('/register', async (req, res) => {
   //  Validate information is as expected
-  console.log(req);
+  console.log(req.apiGateway.context);
+  req.apiGateway.context.callbackWaitsForEmptyEventLoop = false;
   const { error, value } = validateRegistration(req.body);
   if (error) {
     return res.status(400).json({ error: error.details.map((m) => m.message) });
   }
 
+  //  Hash Password
   const salt = await bcrypt.genSalt(10);
   const hashed = await bcrypt.hash(value.password, salt);
 
@@ -45,7 +47,6 @@ router.post('/register', async (req, res) => {
       useUnifiedTopology: true
     })
     .then((c) => {
-      //  Hash Password
       User.save()
         .then((d) => {
           return res.status(200).json({ id: newUser.id });
