@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const serverless = require('serverless-http');
 
 const User = require('../express/models/User');
@@ -28,50 +29,33 @@ router.post('/register', async (req, res) => {
   }
 
   //  DB
-  const mongoose = require('mongoose');
-  mongoose.connect(
-    process.env.DB_HOST,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: false,
-      useFindAndModify: false,
-      useCreateIndex: false
-    },
-    async () => {
-      console.log('DB Connected');
-      console.log(1);
-      //  Check if email exists already
-      const ifExists = await User.findOne({ email: value.email });
-      if (ifExists) {
-        res.status(400).json({ error: 'Email already exists' });
-      }
-      console.log(2);
+  const db = mongoose.connect(process.env.DB_HOST, {
+    useNewUrlParser: true,
+    useUnifiedTopology: false,
+    useFindAndModify: false,
+    useCreateIndex: false
+  });
 
+  User.find({ email: value.email }, function (err, docs) {
+    if (docs) {
+      res.status(400).json({ error: 'Email already exists' });
+    } else {
       //  Hash Password
-      const salt = await bcrypt.genSalt(10);
-      const hashed = await bcrypt.hash(value.password, salt);
-      console.log(3);
+      const salt = bcrypt.genSalt(10);
+      const hashed = bcrypt.hash(value.password, salt);
 
-      //  Process user details and save to DB
-      try {
-        const user = await new User({
-          name: value.name,
-          email: value.email,
-          password: hashed
-        })
-          .save()
-          .then(() => {
-            console.log('DB disconnected');
-            mongoose.disconnect();
-            console.log(4);
-          });
-        res.status(200).json({ id: user.id });
-      } catch (error) {
-        mongoose.disconnect();
-        res.sendStatus(500).end();
-      }
+      const newUser = new User({
+        name: value.name,
+        email: value.email,
+        password: hashed
+      })
+        .save()
+        .then((d) => {
+          db.disconnect();
+          res.status(200).json({ id: newUser.id });
+        });
     }
-  );
+  });
 });
 
 //  Login
