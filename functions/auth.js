@@ -43,36 +43,25 @@ router.post('/register', (req, res) => {
 
   console.log('New User ' + newUser);
   //  DB
-  mongoose
-    .connect(process.env.DB_HOST, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
-    .then((c) => {
-      console.log('DB Connected');
-      newUser
-        .save()
-        .then((d) => {
-          console.log('Save to DB');
-          return res.status(200).json({ id: newUser.id });
-        })
-        .finally((f) => mongoose.disconnect())
-        .catch((err) => {
-          mongoose.disconnect();
-          return res.status(400).json({ error: err });
-        });
 
-      // User.find({ email: value.email }, function (err, docs) {
-      //   if (docs) {
-      //     res.status(400).json({ error: 'Email already exists' });
-      //   } else {
-      //   }
-      // });
+  newUser
+    .save()
+    .then((d) => {
+      console.log('Save to DB');
+      return res.status(200).json({ id: newUser.id });
     })
+    .finally((f) => mongoose.disconnect())
     .catch((err) => {
       mongoose.disconnect();
       return res.status(400).json({ error: err });
     });
+
+  // User.find({ email: value.email }, function (err, docs) {
+  //   if (docs) {
+  //     res.status(400).json({ error: 'Email already exists' });
+  //   } else {
+  //   }
+  // });
   console.log('Done');
 });
 
