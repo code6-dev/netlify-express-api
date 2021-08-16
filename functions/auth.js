@@ -19,6 +19,45 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 //  Routes
 const router = express.Router();
 
+async function run(requestBody) {
+  var value = requestBody;
+  const mongoose = require('mongoose');
+
+  var conn = await mongoose.createConnection(process.env.DB_HOST, {
+    bufferCommands: false,
+    bufferMaxEntries: 0
+  });
+  return async () => {
+    //  Check if email exists already
+    const ifExists = await User.findOne({ email: value.email });
+    if (ifExists) {
+      res.status(400).json({ error: 'Email already exists' });
+    }
+
+    //  Hash Password
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(value.password, salt);
+
+    //  Process user details and save to DB
+    try {
+      const user = await new User({
+        name: value.name,
+        email: value.email,
+        password: hashed
+      })
+        .save()
+        .then(() => {
+          console.log('DB disconnected');
+          conn.disconnect();
+        });
+      res.status(200).json({ id: user.id });
+    } catch (error) {
+      conn.disconnect();
+      res.sendStatus(500).end();
+    }
+  };
+}
+
 //  Registration
 router.post('/register', async (req, res) => {
   //  Validate information is as expected
@@ -27,51 +66,7 @@ router.post('/register', async (req, res) => {
     res.status(400).json({ error: error.details.map((m) => m.message) });
   }
 
-  //  DB
-  const mongoose = require('mongoose');
-  mongoose.connect(
-    process.env.DB_HOST,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: false,
-      useFindAndModify: false,
-      useCreateIndex: false
-    },
-    async () => {
-      console.log('DB Connected');
-      console.log(1);
-      //  Check if email exists already
-      const ifExists = await User.findOne({ email: value.email });
-      if (ifExists) {
-        res.status(400).json({ error: 'Email already exists' });
-      }
-      console.log(2);
-
-      //  Hash Password
-      const salt = await bcrypt.genSalt(10);
-      const hashed = await bcrypt.hash(value.password, salt);
-      console.log(3);
-
-      //  Process user details and save to DB
-      try {
-        const user = await new User({
-          name: value.name,
-          email: value.email,
-          password: hashed
-        })
-          .save()
-          .then(() => {
-            console.log('DB disconnected');
-            mongoose.disconnect();
-            console.log(4);
-          });
-        res.status(200).json({ id: user.id });
-      } catch (error) {
-        mongoose.disconnect();
-        res.sendStatus(500).end();
-      }
-    }
-  );
+  await run(value);
 });
 
 //  Login
