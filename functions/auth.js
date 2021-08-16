@@ -23,10 +23,20 @@ const router = express.Router();
 //  Registration
 router.post('/register', (req, res) => {
   //  Validate information is as expected
+  console.log(req);
   const { error, value } = validateRegistration(req.body);
   if (error) {
     return res.status(400).json({ error: error.details.map((m) => m.message) });
   }
+
+  const salt = bcrypt.genSalt(10);
+  const hashed = bcrypt.hash(value.password, salt);
+
+  const newUser = new User({
+    name: value.name,
+    email: value.email,
+    password: hashed
+  });
 
   //  DB
   mongoose
@@ -36,15 +46,7 @@ router.post('/register', (req, res) => {
     })
     .then((c) => {
       //  Hash Password
-      const salt = bcrypt.genSalt(10);
-      const hashed = bcrypt.hash(value.password, salt);
-
-      const newUser = new User({
-        name: value.name,
-        email: value.email,
-        password: hashed
-      })
-        .save()
+      User.save()
         .then((d) => {
           return res.status(200).json({ id: newUser.id });
         })
