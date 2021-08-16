@@ -27,6 +27,10 @@ router.post('/register', async (req, res) => {
   if (error) {
     return res.status(400).json({ 'JOI Error': error.details.map((m) => m.message) });
   }
+  mongoose.createConnection(process.env.DB_HOST, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  });
 
   //  Hash Password
   const s = await bcrypt.genSalt(10); //.then((s) => s);
@@ -39,15 +43,6 @@ router.post('/register', async (req, res) => {
       email: value.email,
       password: hashed
     });
-
-    mongoose.connect(
-      process.env.DB_HOST,
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      },
-      () => console.log('DB Connected')
-    );
 
     const result = await newUser.save();
     if (result) {
