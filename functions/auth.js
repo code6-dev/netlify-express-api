@@ -19,20 +19,11 @@ app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true })
 //  Routes
 const router = express.Router();
 
-mongoose.connect(
-  process.env.DB_HOST,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  },
-  () => console.log('DB Connected')
-);
-
 //  Registration
 router.post('/register', async (req, res) => {
   //  Validate information is as expected
   const { error, value } = validateRegistration(req.body);
-  console.log(value);
+
   if (error) {
     return res.status(400).json({ 'JOI Error': error.details.map((m) => m.message) });
   }
@@ -47,18 +38,26 @@ router.post('/register', async (req, res) => {
       name: value.name,
       email: value.email,
       password: hashed
-    })
-      .save()
-      .then((d) => {
-        console.log('New User ' + newUser);
-        console.log('Save to DB');
-        return res.status(200).json({ id: newUser.id });
-      })
-      .finally((f) => mongoose.disconnect())
-      .catch((err) => {
-        mongoose.disconnect();
-        return res.status(400).json({ 'Save Error': err });
-      });
+    });
+
+    mongoose.connect(
+      process.env.DB_HOST,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      },
+      () => console.log('DB Connected')
+    );
+
+    const result = await newUser.save();
+    if (result) {
+      console.log('New User ' + newUser);
+      console.log('Save to DB');
+      mongoose.disconnect();
+      return res.status(200).json({ id: newUser.id });
+    } else {
+      return res.status(400).json({ 'Save Error': err });
+    }
   }
 
   //  DB
@@ -70,6 +69,7 @@ router.post('/register', async (req, res) => {
   //   }
   // });
   console.log('Done');
+  return res.sendStatus(500);
 });
 
 //  Login
