@@ -23,7 +23,6 @@ const router = express.Router();
 //  Registration
 router.post('/register', (req, res) => {
   //  Validate information is as expected
-  req.apiGateway.context.callbackWaitsForEmptyEventLoop = false;
   const { error, value } = validateRegistration(req.body);
   if (error) {
     return res.status(400).json({ error: error.details.map((m) => m.message) });
