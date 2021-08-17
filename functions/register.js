@@ -18,14 +18,14 @@ exports.handler = async function (event, context) {
   }
 
   //  Hash Password
-  const salt = await bcrypt.genSalt(10);
-  const hashed = await bcrypt.hash(value.password, salt);
-  console.log(hashed ? 'Good Hash' : 'No Hash');
+  // const salt = await bcrypt.genSalt(10);
+  // const hashed = await bcrypt.hash(value.password, salt);
+  // console.log(hashed ? 'Good Hash' : 'No Hash');
 
   const newUser = new User({
     name: value.name,
     email: value.email,
-    password: hashed
+    password: 'hashed'
   });
 
   // Set DB connection
