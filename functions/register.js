@@ -1,11 +1,13 @@
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 
-const { validateRegistration } = require('./validation/validation');
-const User = require('./models/User');
+const { validateRegistration } = require('../validation/validation');
+const User = require('../models/User');
 
 exports.handler = async function (event, context) {
+  const body = JSON.parse(event.body);
+
   // Set DB connection
-  const mongoose = require('mongoose');
   mongoose.connect(
     process.env.DB_HOST,
     {
@@ -16,8 +18,6 @@ exports.handler = async function (event, context) {
     },
     () => console.log('DB Connected')
   );
-
-  const body = JSON.parse(event.body);
 
   //  Validate data
   const { error, value } = validateRegistration(body);
