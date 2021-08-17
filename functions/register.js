@@ -5,8 +5,9 @@ const { validateRegistration } = require('../validation/validation');
 const User = require('../models/User');
 
 exports.handler = async function (event, context) {
+  context.callbackWaitsForEmptyEventLoop = false;
   const body = JSON.parse(event.body);
-  console.log(context);
+
   //  Validate data
   const { error, value } = validateRegistration(body);
   if (error) {
