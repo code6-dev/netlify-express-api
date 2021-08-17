@@ -28,7 +28,7 @@ exports.handler = async function (event, context) {
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
-    .then((c) => {
+    .then(async (c) => {
       //  Process user details and save to DB
       newUser = new User({
         name: value.name,
