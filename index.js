@@ -1,32 +1,55 @@
-const cors = require('cors');
-const helmet = require('helmet');
-const express = require('express');
+const bcrypt = require('bcryptjs');
 
-require('dotenv').config();
+const { validateRegistration } = require('./validation/validation');
+const User = require('./models/User');
 
-//  DB
-const mongoose = require('mongoose');
-mongoose.connect(
-  process.env.DB_HOST,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true
-  },
-  () => console.log('DB Connected')
-);
+exports.handler = async function (event, context) {
+  // Set DB connection
+  const mongoose = require('mongoose');
+  mongoose.connect(
+    process.env.DB_HOST,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true
+    },
+    () => console.log('DB Connected')
+  );
 
-const app = express();
+  const body = JSON.parse(event.body);
 
-//  Middleware
-app.use(cors(), helmet(), express.json(), express.urlencoded({ extended: true }));
+  //  Validate data
+  const { error, value } = validateRegistration(body);
+  if (error) {
+    return {
+      status: 400,
+      body: JSON.stringify({ message: 'Invalid data\n' + error.details.map((m) => m.message) })
+    };
+  }
 
-//  Routes
-const authRoute = require('./routes/auth');
-const itemsRoute = require('./routes/item');
+  //  Hash Password
+  const salt = await bcrypt.genSalt(10);
+  const hashed = await bcrypt.hash(value.password, salt);
 
-app.use('/api/user', authRoute);
-app.use('/api/item', itemsRoute);
+  //  Process user details and save to DB
+  const newUser = new User({
+    name: value.name,
+    email: value.email,
+    password: hashed
+  });
 
-app.listen(3001, () => console.log('Server listening on Port 3001'));
+  const result = await newUser.save();
+
+  if (!!result) {
+    return {
+      status: 200,
+      body: JSON.stringify({ id: user.id })
+    };
+  } else {
+    return {
+      status: 500,
+      body: JSON.stringify({ error: 'User not saved' })
+    };
+  }
+};
